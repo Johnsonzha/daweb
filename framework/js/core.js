@@ -28,26 +28,24 @@ if ( !com.b5m.shoppingassist ) com.b5m.shoppingassist = {};
 	};
 	
 	var hasOwn=Object.prototype.hasOwnProperty,
-		slice=Array.prototype.slice,
-		splice=Array.prototype.splice,
 		op = Object.prototype,
         ostring = op.toString,
-		modules={},
-		waitModules=[],
-		//the module has put
+		_modules={},		//modules loaded
+		waitDepends=[],		//depends wait to load
+		_waitDepends={},	//depends has add to queue	
+		waitModules=[],		//modules wait to load
 		_waitModules={},
-		waitDependencies=[],
-		//the dependence has put
-		_waitDependencies={};
+		loading=false,
+		executing=false;
 		
 	(function(){
 		//jquery
 		if (typeof jQuery != 'undefined'&&jQuery().jquery>'1.4.3' && typeof (jQuery.ajax) != 'undefined'){
-			modules['jquery']=jQuery||$;
+			_modules['jquery']=jQuery||$;
 		}
 		//rule
 		if(S.rule){
-			modules['rule']=S.rule;
+			_modules['rule']=S.rule;
 		}
 	})();
 	
@@ -73,35 +71,7 @@ if ( !com.b5m.shoppingassist ) com.b5m.shoppingassist = {};
 		};
 		head.appendChild(script);
 	};
-	/**
-	 * @param name:				module's name
-	 * @param dependencies:		module's dependencies
-	 * @param fn:				module function
-	 */
-	S.define=function(name,dependencies,fn,options){
-		if(hasProp(modules,name)&&!(options&&options.force))return;
-		if(typeof dependencies==='function'||isArray(dependencies)&&dependencies.length===0){
-			addModule(name,dependencies());
-			return;
-		}
-		var module={name:name,dependencies:dependencies,fn:fn};
-		var ds=module.dependencies;
-		if(!hasDependencies(ds)){
-			putDepends(ds)
-			putWaitModule(module);
-			return;
-		}else{
-			parseModule(module);
-		}
-	};
-	var _modules={},		//modules loaded
-		waitDepends=[],		//depends wait to load
-		_waitDepends={},	//depends has add to queue	
-		waitModules=[],		//modules wait to load
-		_waitModules={},
-		loading=false,
-		executing=false;	//modules has add to queue
-		
+	
 	function hasDependencies(ds){
 		for(var i=0,l=ds.length;i<l;i++){
 			if(!hasProp(_modules,ds[i])){
@@ -196,5 +166,25 @@ if ( !com.b5m.shoppingassist ) com.b5m.shoppingassist = {};
 		}
 		executing=false;
 	};
-	
+	/**
+	 * @param name:				module's name
+	 * @param dependencies:		module's dependencies
+	 * @param fn:				module function
+	 */
+	S.define=function(name,dependencies,fn,options){
+		if(hasProp(modules,name)&&!(options&&options.force))return;
+		if(typeof dependencies==='function'||isArray(dependencies)&&dependencies.length===0){
+			addModule(name,dependencies());
+			return;
+		}
+		var module={name:name,dependencies:dependencies,fn:fn};
+		var ds=module.dependencies;
+		if(!hasDependencies(ds)){
+			putDepends(ds)
+			putWaitModule(module);
+			return;
+		}else{
+			parseModule(module);
+		}
+	};
 })(com.b5m.shoppingassis,function (msg) {window.console && console.log(msg)});
