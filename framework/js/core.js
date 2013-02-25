@@ -5,43 +5,43 @@
 
 //define module js
 var define;
-(function(root,log,undefined){
-	var config={
-		server:'http://localhost:8080/b5mplugin',
-		paths:{
-			'jquery':{
-				path:'http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js',
-				_export:function(){
+(function(root, log, undefined) {
+	var config = {
+		server : 'http://localhost:8080/b5mplugin',
+		paths : {
+			'jquery' : {
+				path : 'http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js',
+				_export : function() {
 					return jQuery.noConflict(true);
 				}
 			},
-			'rule':{
-				path:'/js/b5m.v3.rule.js?v='+new Date().getTime(),
-				_export:function(){
+			'rule' : {
+				path : '/js/b5m.v3.rule.js?v=' + new Date().getTime(),
+				_export : function() {
 					return S.rule;
 				}
 			}
 		}
 	};
-	var hasOwn=Object.prototype.hasOwnProperty,
+	var hasOwn = Object.prototype.hasOwnProperty,
 		op = Object.prototype,
         ostring = op.toString,
-		_modules={},		//modules loaded
-		waitDepends=[],		//depends wait to load
-		_waitDepends={},	//depends has add to queue	
-		waitModules=[],		//modules wait to load
-		_waitModules={},
-		loading=false,
-		executing=false;
+		_modules = {},		//modules loaded
+		waitDepends = [],		//depends wait to load
+		_waitDepends = {},	//depends has add to queue	
+		waitModules = [],		//modules wait to load
+		_waitModules = {},
+		loading = false,
+		executing = false;
 		
 	(function(){
 		//jquery
-		if (typeof jQuery != 'undefined'&&jQuery().jquery>'1.4.3' && typeof (jQuery.ajax) != 'undefined'){
-			_modules['jquery']=jQuery||$;
+		if (typeof jQuery != 'undefined' && jQuery().jquery > '1.4.3' && typeof(jQuery.ajax) != 'undefined') {
+			_modules['jquery'] = jQuery || $;
 		}
 		//rule
-		if(typeof S!='undefined' && S.rule){
-			_modules['rule']=S.rule;
+		if (typeof S != 'undefined' && S.rule) {
+			_modules['rule'] = S.rule;
 		}
 	})();
 	
@@ -51,11 +51,11 @@ var define;
     function isArray(it) {
         return ostring.call(it) === '[object Array]';
     }
-	function loadScript(uri,callback){
+	function loadScript(uri, callback) {
 		var head = document.getElementsByTagName('head')[0];
 		var script = document.createElement("script");
 		script.type = 'text/javascript';
-		script.src = uri.match(/http|https/)?uri:(config.server + uri);
+		script.src = uri.match(/http|https/) ? uri : (config.server + uri);
 		script.onload = script.onreadystatechange = function() {
 			if (!script.readyState || script.readyState === 'loaded' || script.readyState === 'complete') {
 				script.onload = script.onreadystatechange = null;
@@ -67,92 +67,89 @@ var define;
 		head.appendChild(script);
 	};
 	
-	function hasDependencies(ds){
-		for(var i=0,l=ds.length;i<l;i++){
-			if(!hasProp(_modules,ds[i])){
+	function hasDependencies(ds) {
+		for (var i = 0, l = ds.length; i < l; i++) {
+			if (!hasProp(_modules, ds[i])) {
 				return false;
 			}
 		}
 		return true;
 	};
-	function putDepends(d){
-		if(!d)return;
-		if(typeof d=='string')d=[d];
-		for(var i=0,l=d.length;i<l;i++){
-			if(hasProp(_waitDepends,d[i]))continue;
-			_waitDepends[d[i]]=true;
+	function putDepends(d) {
+		if (!d)
+			return;
+		if (typeof d == 'string')
+			d = [d];
+		for (var i = 0, l = d.length; i < l; i++) {
+			if (hasProp(_waitDepends, d[i])) continue;
+			_waitDepends[d[i]] = true;
 			waitDepends.push(d[i]);
-			setTimeout(function(){
-				loadDepends();
-			},13);
+			setTimeout(function() { loadDepends(); }, 13);
 		}
 	};
-	function parseModule(m){
-		var ds=m.dependencies||[],args=[];
-		for(var i=0,l=ds.length;i<l;i++){
+	function parseModule(m) {
+		var ds = m.dependencies || [], args = [];
+		for (var i = 0, l = ds.length; i < l; i++) {
 			args.push(_modules[ds[i]]);
 		}
-		addModule(m.name,m.fn.apply(root,args));
+		addModule(m.name, m.fn.apply(root, args));
 		return true;
 	};
-	function addModule(name,module){
-		_modules[name]=module;
+	function addModule(name, module) {
+		_modules[name] = module;
 		executeWaitModules();
 	};
-	function putWaitModule(module){
-		if(!module)return;
-		var name=module.name;
-		if(hasProp(_waitModules,name))return;
-		_waitModules[name]=true;
+	function putWaitModule(module) {
+		if (!module) return;
+		var name = module.name;
+		if (hasProp(_waitModules, name)) return;
+		_waitModules[name] = true;
 		waitModules.push(module);
 	};
-	/**
-	 * 
-	 */
-	function loadDepends(waits){
-		if(loading)return;
-		loading=true;
-		if(typeof waits==='undefined'||!waits){
-			waits=waitDepends;
+	function loadDepends(waits) {
+		if (loading) return;
+		loading = true;
+		if (typeof waits === 'undefined' || !waits) {
+			waits = waitDepends;
 		}
-		var depend=waits.shift();
-		if(!depend){
-			loading=false;
+		var depend = waits.shift();
+		if (!depend) {
+			loading = false;
 			return;
 		}
-		var path=config.paths[depend],_export;
-		if(typeof path==='object'){
-			_export=path._export;
-			path=path.path;
+		var path = config.paths[depend], _export;
+		if (typeof path === 'object') {
+			_export = path._export;
+			path = path.path;
 		}
-		if(path){
-			loadScript(path,function(){
-				if(typeof _export=='function')addModule(depend,_export());
-			});
-		}else{
-			log("module["+depend+"] wait to export");
+		if (path) {
+			loadScript(path, function() {
+						if (typeof _export == 'function')
+							addModule(depend, _export());
+					});
+		} else {
+			log("module[" + depend + "] wait to export");
 		}
-		loading=false;
+		loading = false;
 		loadDepends(waits);
 	};
-	/**
-	 * 
-	 */
-	function executeWaitModules(waits){
-		if(typeof waits==='undefined'||!waits){
-			waits=waitModules;
+	
+	
+	function executeWaitModules(waits) {
+		if (typeof waits === 'undefined' || !waits) {
+			waits = waitModules;
 		}
-		var i=-1,m;
-		while(++i<waits.length){
-			m=waits[i];
-			if(!m)continue;
-			if(hasProp(_modules,m.name)){
-				waits[i]=null;
+		var i = -1, m;
+		while (++i < waits.length) {
+			m = waits[i];
+			if (!m) continue;
+			if (hasProp(_modules, m.name)) {
+				waits[i] = null;
 				continue;
 			}
-			if(hasDependencies(m.dependencies)){
+			if (hasDependencies(m.dependencies)) {
 				parseModule(m);
-				waits[i]=null;
+				waits[i] = null;
 			}
 		}
 	};
@@ -161,23 +158,23 @@ var define;
 	 * @param dependencies:		module's dependencies
 	 * @param fn:				module function
 	 */
-	define=function(name,dependencies,fn,options){
-		if(hasProp(_modules,name)&&!(options&&options.force))return;
-		if(typeof dependencies==='function'||isArray(dependencies)&&dependencies.length===0){
-			addModule(name,dependencies());
+	define = function(name, dependencies, fn, options) {
+		if (hasProp(_modules, name) && !(options && options.force)) return;
+		if (typeof dependencies === 'function' || isArray(dependencies) && dependencies.length === 0) {
+			addModule(name, dependencies());
 			return;
 		}
-		var module={name:name,dependencies:dependencies,fn:fn};
-		var ds=module.dependencies;
-		if(!hasDependencies(ds)){
+		var module = { name : name, dependencies : dependencies, fn : fn };
+		var ds = module.dependencies;
+		if (!hasDependencies(ds)) {
 			putDepends(ds)
 			putWaitModule(module);
 			return;
-		}else{
+		} else {
 			parseModule(module);
 		}
 	};
-})(this,function (msg) {window.console && console.log(msg)});
+})(this, function(msg) { window.console && console.log(msg) });
 
 // some utils
 define('_', function() {
@@ -809,10 +806,6 @@ define('mvc', ['_', 'jquery'], function(_, $) {
 	var extend = function(protoProps, staticProps) {
 		var parent = this;
 		var child;
-
-		// The constructor function for the new subclass is either defined by you
-		// (the "constructor" property in your `extend` definition), or defaulted
-		// by us to simply call the parent's constructor.
 		if (protoProps && _.has(protoProps, 'constructor')) {
 			child = protoProps.constructor;
 		} else {
@@ -821,30 +814,22 @@ define('mvc', ['_', 'jquery'], function(_, $) {
 			};
 		}
 
-		// Add static properties to the constructor function, if supplied.
 		_.extend(child, parent, staticProps);
 
-		// Set the prototype chain to inherit from `parent`, without calling
-		// `parent`'s constructor function.
 		var Surrogate = function() {
 			this.constructor = child;
 		};
 		Surrogate.prototype = parent.prototype;
 		child.prototype = new Surrogate;
 
-		// Add prototype properties (instance properties) to the subclass,
-		// if supplied.
 		if (protoProps)
 			_.extend(child.prototype, protoProps);
 
-		// Set a convenience property in case the parent's prototype is needed
-		// later.
 		child.__super__ = parent.prototype;
 
 		return child;
 	};
 
-	// Set up inheritance for the model, collection, router, view and history.
 	Model.extend = Collection.extend = View.extend = extend;
 	return mvc;
 });
