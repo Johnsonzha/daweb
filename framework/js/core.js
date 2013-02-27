@@ -31,6 +31,7 @@ var define;
 		_waitDepends = {},	//depends has add to queue	
 		waitModules = [],		//modules wait to load
 		_waitModules = {},
+		waitRequires = [],		//requires wait to load
 		loading = false,
 		executing = false;
 		
@@ -93,6 +94,10 @@ var define;
 			args.push(_modules[ds[i]]);
 		}
 		addModule(m.name, m.fn.apply(root, args));
+		//execute require
+		setTimeout(function() {
+			executeWaitRequires();
+		}, 1);
 		return true;
 	};
 	function addModule(name, module) {
@@ -153,6 +158,35 @@ var define;
 			}
 		}
 	};
+	function parseRequire(require) {
+		var ds = require.dependencies || [], args = [];
+		for (var i = 0, l = ds.length; i < l; i++) {
+			args.push(_modules[ds[i]]);
+		}
+		require.fn.apply(root,args);
+		return true;
+		
+	};
+	
+	function executeWaitRequires(requires){
+		if (typeof requires === 'undefined' || !requires) {
+			requires = waitRequires;
+		}
+		if(requires.length === 0) return;
+		var i = -1, r;
+		while (++i < requires.length) {
+			r = requires[i];
+			if (!r) continue;
+			if (hasDependencies(r.dependencies)) {
+				parseRequire(r);
+				requires[i] = null;
+			}
+		}
+	};
+	
+	function putWaiRequire(require){
+		waitRequires.push(require);
+	};
 	/**
 	 * @param name:				module's name
 	 * @param dependencies:		module's dependencies
@@ -167,13 +201,35 @@ var define;
 		var module = { name : name, dependencies : dependencies, fn : fn };
 		var ds = module.dependencies;
 		if (!hasDependencies(ds)) {
-			putDepends(ds)
+			putDepends(ds);
 			putWaitModule(module);
 			return;
 		} else {
 			parseModule(module);
 		}
 	};
+	
+	/**
+	 * @param dependencies:		dependencies
+	 * @param fn:				function
+	 */
+	require=function(dependencies,fn){
+		if (arguments.length === 0) return;
+		if (typeof dependencies === 'function' && arguments.length === 1) {
+			fn();
+			return;
+		}
+		var require = { dependencies : dependencies, fn : fn };
+		var ds = require.dependencies;
+		if (!hasDependencies(ds)) {
+			putDepends(ds)
+			putWaiRequire(require);
+			return;
+		} else {
+			parseRequire(require);
+		}
+	};
+	
 })(this, function(msg) { window.console && console.log(msg) });
 
 // some utils

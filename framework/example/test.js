@@ -21,7 +21,7 @@ define('console',function(){
 	
 });
 
-define('app',['mvc','jquery','console'],function(mvc,$,console){
+require(['mvc','jquery','console'],function(mvc,$,console){
 	var inputItem=mvc.Model.extend({
 		defaults:function(){
 			return {
@@ -94,5 +94,9 @@ define('app',['mvc','jquery','console'],function(mvc,$,console){
 	new AcInput;
 	new AcView;
 });
+
+require(['jquery'],function($){
+	alert($().jquery)
+})
 
 
