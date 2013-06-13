@@ -103,6 +103,7 @@ var define;
 	function addModule(name, module) {
 		_modules[name] = module;
 		executeWaitModules();
+		executeWaitRequires();
 	};
 	function putWaitModule(module) {
 		if (!module) return;
