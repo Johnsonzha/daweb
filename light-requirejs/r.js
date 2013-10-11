@@ -112,7 +112,8 @@ var define, require;
             loading = false;
             return;
         }
-        var path = module_config.paths[depend] || module_config.getModuleUrl(depend), _export;
+        //var path = module_config.paths[depend] || module_config.getModuleUrl(depend), _export;
+        var path = module_config.paths[depend], _export;
         if (typeof path === 'object') {
             _export = path._export;
             path = path.path;
@@ -220,5 +221,5 @@ var define, require;
             parseRequire(r);
         }
     };
-    
+   require.config = module_config; 
 })(this, function(msg) { window.console && console.log(msg) });
