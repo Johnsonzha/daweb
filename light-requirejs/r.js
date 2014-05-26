@@ -71,7 +71,7 @@ var define, require;
         if (!d) return;
         if (typeof d == 'string') d = [d];
         for (var i = 0, l = d.length; i < l; i++) {
-            if (hasProp(_waitDepends, d[i]) || hasProp(_modules, d[i])) continue;
+            if (hasProp(_waitDepends, d[i]) || hasProp(_modules, d[i]) || hasProp(_waitModules, d[i])) continue;
             _waitDepends[d[i]] = true;
             waitDepends.push(d[i]);
             setTimeout(function() { loadDepends(); }, 1);
